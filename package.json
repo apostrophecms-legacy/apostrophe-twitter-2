@@ -1,0 +1,29 @@
+{
+  "name": "apostrophe-twitter-2",
+  "version": "0.5.1",
+  "description": "Now with server-side template rendering! Adds a Twitter feed widget to Apostrophe's rich content editor",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/punkave/apostrophe-twitter-2.git"
+  },
+  "keywords": [
+    "apostrophe",
+    "rich",
+    "text",
+    "rich",
+    "content",
+    "twitter"
+  ],
+  "author": "P'unk Avenue punkave.com",
+  "license": "MIT",
+  "dependencies": {
+    "extend": "~1.1.3",
+    "lodash": "2.4.x",
+    "simple-twitter": "~1.0.3",
+    "qs": "~0.6.5"
+  }
+}

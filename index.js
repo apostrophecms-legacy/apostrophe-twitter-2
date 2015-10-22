@@ -2,6 +2,7 @@ var extend = require('extend');
 var twitter = require('simple-twitter');
 var _ = require('lodash');
 var qs = require('qs');
+var moment = require('moment');
 
 module.exports = function(options, callback) {
   return new Construct(options, callback);
@@ -41,7 +42,11 @@ function Construct(options, callback) {
   // Make sure that aposScripts and aposStylesheets summon our assets
   self.pushAsset('script', 'content', { when: 'always' });
   self.pushAsset('script', 'editor', { when: 'user' });
-  self.pushAsset('stylesheet', 'content', { when: 'always' });
+
+  // give users an opt out of our styles
+  if (!options.resetStyles) {
+    self.pushAsset('stylesheet', 'content', { when: 'always' });
+  }
 
   // Serve our feeds. Be sure to cache them so we don't hit the rate limit.
   var tweetCache = {};
@@ -58,14 +63,20 @@ function Construct(options, callback) {
       return res.send('not found');
     }
 
+    // ensure hashtags have hashtags and allow multiple (maybe)
+    if (hashtag) {
+      hashtag = _.map(hashtag.split(' '),function(s){
+        return (s.substr(0,1) == '#') ? s : '#'+s;
+      }).join(' ');
+    }
+
     if (username && !hashtag) {
       url = 'statuses/user_timeline.json?' + qs.stringify({ screen_name: username, count: count });
     } else if (username && hashtag) {
-      url = 'search/tweets.json?' + qs.stringify({ q: 'from:' + username + ' #' + hashtag, count: count });
+      url = 'search/tweets.json?' + qs.stringify({ q: 'from:' + username + ' ' + hashtag, count: count });
     } else if (hashtag && !username) {
-      url = 'search/tweets.json?' + qs.stringify({ q: ' #' + hashtag, count: count });
+      url = 'search/tweets.json?' + qs.stringify({ q: hashtag, count: count });
     }
-
 
     if (_.has(tweetCache, url)) {
       var cache = tweetCache[url];
@@ -129,6 +140,10 @@ function Construct(options, callback) {
       var urlSansPeriod = url.replace(/\.$/, '');
       return '<a href="' + urlSansPeriod + '" target="blank">' + url + '</a>';
     });
+  });
+
+  self._apos.addLocal('getRelativeTime', function(datetime, noSuffix) {
+    return moment(Date.parse(datetime)).fromNow(noSuffix);
   });
 
   return setImmediate(function() { return callback(null); });

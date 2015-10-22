@@ -1,6 +1,6 @@
 {
   "name": "apostrophe-twitter-2",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Now with server-side template rendering! Adds a Twitter feed widget to Apostrophe's rich content editor",
   "main": "index.js",
   "scripts": {

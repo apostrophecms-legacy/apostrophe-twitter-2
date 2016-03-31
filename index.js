@@ -131,8 +131,33 @@ function Construct(options, callback) {
   self._apos.addLocal('linkifyTweetUrls', function(text) {
     return text.replace(/https?\:\/\/\S+/g, function(url) {
       var urlSansPeriod = url.replace(/\.$/, '');
+      if (url.match(/…$/)) {
+        // Useless URL
+        return '';
+      }
       return '<a href="' + urlSansPeriod + '" target="blank">' + url + '</a>';
     });
+  });
+
+  self._apos.addLocal('linkifyTweetMentions', function(text) {
+    return text.replace(/\@[^\s\,\.\!\?\:\/]+/g, function(user) {
+      var result = '<a class="apos-twitter-mention" href="http://twitter.com/' + self._apos.escapeHtml(user.substr(1)) + '" target="blank">' + user + '</a>';
+      return result;
+    });
+  });
+
+  self._apos.addLocal('linkifyTweetHashtags', function(text) {
+    return text.replace(/\#[^\s\,\.\!\?\:\/]+/g, function(hashtag) {
+      return '<a class="apos-twitter-hashtag" href="http://twitter.com/' + self._apos.escapeHtml(hashtag) + '" target="blank">' + hashtag + '</a>';
+    });
+  });
+
+  self._apos.addLocal('linkifyTweet', function(text) {
+    return self._apos._aposLocals.linkifyTweetMentions(
+      self._apos._aposLocals.linkifyTweetHashtags(
+        self._apos._aposLocals.linkifyTweetUrls(text)
+      )
+    );
   });
 
   self._apos.addLocal('getRelativeTime', function(datetime, noSuffix) {

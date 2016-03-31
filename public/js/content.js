@@ -4,6 +4,6 @@ apos.widgetPlayers.twitter = function($widget) {
   $.post('/apos-twitter/feed', widgetData)
   .done(function(data) {
     $('[data-apos-twitter-contents]').html(data).addClass('loaded');
-    $widget.trigger('aposTwitterReady');    
+    $widget.trigger('aposTwitterReady');
   });
 };

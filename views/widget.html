@@ -5,8 +5,7 @@
     <li class="apos-tweet">
       <span class="apos-tweet-profile">
         <span class="apos-tweet-profile-image"></span>
-        <span class="apos-tweet-username"><a href="https://twitter.com/{{ tweet.user.screen_name | e }}">@{{ tweet.user.screen_name | e }}</a></span>
-        <span class="apos-tweet-date">{{ tweet.created_at | date('MM/DD/YYYY h:mma') }}</span>
+        <a class="apos-tweet-screen-name" href="https://twitter.com/{{ tweet.user.screen_name | e }}">@{{ tweet.user.screen_name | e }}</a><a class="apos-tweet-date" href="https://twitter.com/{{ tweet.user.screen_name | e }}/status/{{ tweet.id_str }}">{{ fromNow(tweet.created_at) }}</a>
       </span>
 
       <span class="apos-tweet-text">{{ linkifyTweet(tweet.text) }}</span>

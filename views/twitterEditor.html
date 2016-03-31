@@ -1,4 +1,5 @@
 {% extends "baseWidgetEditor.html" %}
+{% include "formMacros.html" %}
 
 {% block modalClass %}
   {{ super() }} apos-twitter-editor
@@ -17,13 +18,19 @@
 	<label>Twitter Username</label>
   <input class="apos-twitter-account" />
 </fieldset>
+<fieldset class="apos-fieldset apos-fieldset-selectize apos-fieldset-select apos-twitter-list">
+  <label>Twitter List (optional, requires username, not combined with hashtags)</label>
+  <div class="apos-select-wrapper apos-inline-input">
+    {{ formSelectStandalone(name, [ { label: 'NONE — SHOW USER TWEETS', value: '' } ]) }}
+  </div>
+</fieldset>
 <fieldset class="apos-fieldset apos-fieldset-text">
-  <label>Filter Tweets by Hashtag</label>
+  <label>Filter Tweets by Hashtag (optional, not combined with lists)</label>
   <input class="apos-twitter-hashtag" />
- </fieldset>
- <fieldset class="apos-fieldset apos-fieldset-text">
-   <label>Limit Number of Tweets</label>
-   <input type="text" name="limit" class="apos-input-narrow" data-apos-twitter-limit />
-  </fieldset>
+</fieldset>
+<fieldset class="apos-fieldset apos-fieldset-text">
+  <label>Limit Number of Tweets</label>
+  <input type="text" name="limit" class="apos-input-narrow" data-apos-twitter-limit />
+</fieldset>
 
 {% endblock %}

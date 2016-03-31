@@ -48,15 +48,14 @@ function Construct(options, callback) {
     self.pushAsset('stylesheet', 'content', { when: 'always' });
   }
 
-  // Serve our feeds. Be sure to cache them so we don't hit the rate limit.
-  var tweetCache = {};
-  var url;
 
   app.post('/apos-twitter/feed', function(req, res) {
     var widgetOptions = req.body || {};
     var username = apos.sanitizeString((widgetOptions.account || ''));
     var hashtag = apos.sanitizeString((widgetOptions.hashtag || ''));
+    var list = widgetOptions.list ? apos.slugify(apos.sanitizeString(widgetOptions.list)) : false;
     var count = widgetOptions.limit || 5;
+    var url;
 
     if (username && !username.length) {
       res.statusCode = 404;
@@ -70,48 +69,42 @@ function Construct(options, callback) {
       }).join(' ');
     }
 
-    if (username && !hashtag) {
-      url = 'statuses/user_timeline.json?' + qs.stringify({ screen_name: username, count: count });
+    var params;
+
+    if (username && list) {
+      url = 'lists/statuses';
+      params = { list_id: list, count: count };
+    } else if (username && !hashtag) {
+      url = 'statuses/user_timeline';
+      params = { screen_name: username, count: count };
     } else if (username && hashtag) {
-      url = 'search/tweets.json?' + qs.stringify({ q: 'from:' + username + ' ' + hashtag, count: count });
+      url = 'search/tweets';
+      params = { q: 'from:' + username + ' ' + hashtag, count: count };
     } else if (hashtag && !username) {
-      url = 'search/tweets.json?' + qs.stringify({ q: hashtag, count: count });
+      url = 'search/tweets';
+      params = { q: hashtag, count: count };
     }
 
-    if (_.has(tweetCache, url)) {
-      var cache = tweetCache[url];
-      var now = (new Date()).getTime();
-      if (now - cache.when > cacheLifetime * 1000) {
-        delete tweetCache[url];
-      } else {
-
-        var widgetData = {
-          options: widgetOptions,
-          tweets: cache.results
-        }
-
-        return res.send(self.render('widget', widgetData));
-      }
-    }
-
-    var reader = new twitter(consumerKey, consumerSecret, accessToken, accessTokenSecret);
-
-    return reader.get(url, function(err, results) {
+    return self.getTwitter(url, params, function(err, results) {
       if (err) {
-        results = '[]';
+        results = { statuses: [] };
       }
-      results = JSON.parse(results);
-      if (results.statuses) {
-        results = results.statuses;
-      }
-      tweetCache[url] = { when: (new Date()).getTime(), results: results };
-
-      var widgetData = {
+      return res.send(self.render('widget', {
         options: widgetOptions,
         tweets: results
-      }
+      }));
+    });
+  });
 
-      return res.send(self.render('widget', widgetData));
+  app.post('/apos-twitter/get-lists', function(req, res) {
+    var username = self._apos.sanitizeString(req.body.username);
+    var url = 'lists/ownerships';
+    return self.getTwitter(url, { screen_name: username }, function(err, results) {
+      if (err) {
+        return res.send([]);
+      } else {
+        return res.send(results.lists);
+      }
     });
   });
 
@@ -145,6 +138,36 @@ function Construct(options, callback) {
   self._apos.addLocal('getRelativeTime', function(datetime, noSuffix) {
     return moment(Date.parse(datetime)).fromNow(noSuffix);
   });
+
+  self.getReader = function() {
+    if (!self.reader) {
+      self.reader = new twitter(consumerKey, consumerSecret, accessToken, accessTokenSecret);
+    }
+    return self.reader;
+  };
+
+  var tweetCache = {};
+
+  self.getTwitter = function(url, params, callback) {
+    params = params ? ('?' + qs.stringify(params)) : false;
+    if (_.has(tweetCache, url + params)) {
+      var cache = tweetCache[url + params];
+      var now = (new Date()).getTime();
+      if (now - cache.when > cacheLifetime * 1000) {
+        delete tweetCache[url + params];
+      } else {
+        return callback(null, JSON.parse(cache.results));
+      }
+    }
+    return self.getReader().get(url, params, function(err, results) {
+      if (err) {
+        console.error('error:', err);
+        return callback(err);
+      }
+      tweetCache[url + params] = { when: (new Date()).getTime(), results: results };
+      return callback(null, JSON.parse(results));
+    });
+  };
 
   return setImmediate(function() { return callback(null); });
 }

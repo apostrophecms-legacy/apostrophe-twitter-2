@@ -17,6 +17,7 @@ function AposTwitterWidgetEditor(options) {
   self.afterCreatingEl = function() {
     self.$account = self.$el.find('.apos-twitter-account');
     self.$account.val(self.data.account);
+    self.$account.on('change', self.updateLists);
 
     self.$list = self.$el.find('.apos-twitter-list select');
 
